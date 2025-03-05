@@ -30,7 +30,16 @@ export default {
   },
   methods: {
     generateBoard() {
-      const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#FF9933", "#33FFF3", "#F333FF", "#33FFD6"];
+      const colors = [
+        "#FF0000",
+        "#024217",
+        "#0000FF",
+        "#FFFF00",
+        "#FF00FF",
+        "#00FFFF",
+        "#a87532",
+        "#28fa6e"
+      ];
       this.board = Array.from({ length: this.boardSize }, () =>
           Array.from({ length: this.boardSize }, () => ({
             color: colors[Math.floor(Math.random() * colors.length)],
@@ -50,6 +59,9 @@ export default {
           const temp = this.board[rowIndex][colIndex].color;
           this.board[rowIndex][colIndex].color = this.board[selectedRow][selectedCol].color;
           this.board[selectedRow][selectedCol].color = temp;
+
+          // Проверяем, образовались ли ряды
+          this.checkAndClearLines();
         }
 
         // Сбрасываем выбор и подсветку
@@ -66,6 +78,89 @@ export default {
     isSelected(rowIndex, colIndex) {
       // Проверяем, является ли ячейка выбранной
       return this.selectedCell && this.selectedCell[0] === rowIndex && this.selectedCell[1] === colIndex;
+    },
+    checkAndClearLines() {
+      let updatedBoard = [...this.board];
+
+      // Проверка горизонтальных линий
+      for (let row = 0; row < this.boardSize; row++) {
+        for (let col = 0; col < this.boardSize - 2; col++) {
+          const color = this.board[row][col].color;
+          if (
+              color === this.board[row][col + 1].color &&
+              color === this.board[row][col + 2].color
+          ) {
+            // Очистка ряда
+            updatedBoard[row][col].color = "";
+            updatedBoard[row][col + 1].color = "";
+            updatedBoard[row][col + 2].color = "";
+          }
+        }
+      }
+
+      // Проверка вертикальных линий
+      for (let col = 0; col < this.boardSize; col++) {
+        for (let row = 0; row < this.boardSize - 2; row++) {
+          const color = this.board[row][col].color;
+          if (
+              color === this.board[row + 1][col].color &&
+              color === this.board[row + 2][col].color
+          ) {
+            // Очистка ряда
+            updatedBoard[row][col].color = "";
+            updatedBoard[row + 1][col].color = "";
+            updatedBoard[row + 2][col].color = "";
+          }
+        }
+      }
+
+      // Обновление доски
+      this.board = updatedBoard;
+
+      // Применяем падение шариков
+      this.dropBalls();
+
+      // Генерация новых шариков сверху
+      this.generateNewBalls();
+    },
+    dropBalls() {
+      // Падение шариков
+      for (let col = 0; col < this.boardSize; col++) {
+        let emptySpaces = 0;
+
+        // Идем снизу вверх и двигаем все фишки вниз
+        for (let row = this.boardSize - 1; row >= 0; row--) {
+          if (this.board[row][col].color === "") {
+            emptySpaces++;
+          } else if (emptySpaces > 0) {
+            // Перемещаем фишку вниз
+            this.board[row + emptySpaces][col].color = this.board[row][col].color;
+            this.board[row][col].color = "";
+          }
+        }
+      }
+    },
+    generateNewBalls() {
+      // Генерация новых фишек сверху
+      const colors = [
+        "#FF0000",
+        "#024217",
+        "#0000FF",
+        "#FFFF00",
+        "#FF00FF",
+        "#00FFFF",
+        "#a87532",
+        "#28fa6e"
+      ];
+
+      for (let col = 0; col < this.boardSize; col++) {
+        for (let row = 0; row < this.boardSize; row++) {
+          if (this.board[row][col].color === "") {
+            // Генерируем случайный цвет для пустых ячеек
+            this.board[row][col].color = colors[Math.floor(Math.random() * colors.length)];
+          }
+        }
+      }
     }
   },
   created() {
