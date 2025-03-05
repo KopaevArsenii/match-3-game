@@ -23,9 +23,9 @@
 export default {
   data() {
     return {
-      boardSize: 8, // Начальный размер поля 8x8
+      boardSize: 8, // Board size (8x8)
       board: [],
-      selectedCell: null, // Храним координаты выбранной ячейки
+      selectedCell: null, // Coordinates of the selected cell
     };
   },
   methods: {
@@ -50,39 +50,50 @@ export default {
       if (this.selectedCell) {
         const [selectedRow, selectedCol] = this.selectedCell;
 
-        // Проверяем, чтобы клик был на соседней ячейке
+        // Ensure the clicked cell is adjacent to the selected one
         if (
             (Math.abs(selectedRow - rowIndex) === 1 && selectedCol === colIndex) ||
             (Math.abs(selectedCol - colIndex) === 1 && selectedRow === rowIndex)
         ) {
-          // Меняем местами фишки
+          // Backup the board before making a swap
+          const backupBoard = JSON.parse(JSON.stringify(this.board));
+
+          // Swap the selected cells
           const temp = this.board[rowIndex][colIndex].color;
           this.board[rowIndex][colIndex].color = this.board[selectedRow][selectedCol].color;
           this.board[selectedRow][selectedCol].color = temp;
 
-          // Проверяем, образовались ли ряды
-          this.checkAndClearLines();
+          // Check if a valid line is cleared
+          if (this.checkAndClearLines()) {
+            // If valid, proceed with the next steps
+            this.dropBalls();
+            this.generateNewBalls();
+          } else {
+            // If no line is cleared, revert the board to the previous state (backup)
+            this.board = backupBoard;
+          }
         }
 
-        // Сбрасываем выбор и подсветку
+        // Reset the selection
         this.selectedCell = null;
       } else {
-        // Выбираем фишку и подсвечиваем её
+        // Select the clicked ball and highlight it
         this.selectedCell = [rowIndex, colIndex];
       }
     },
     clearSelection() {
-      // Сбрасываем выбор, если кликнули вне поля
+      // Reset the selection if clicked outside the field
       this.selectedCell = null;
     },
     isSelected(rowIndex, colIndex) {
-      // Проверяем, является ли ячейка выбранной
+      // Check if the current cell is selected
       return this.selectedCell && this.selectedCell[0] === rowIndex && this.selectedCell[1] === colIndex;
     },
     checkAndClearLines() {
       let updatedBoard = [...this.board];
+      let hasLineCleared = false;
 
-      // Проверка горизонтальных линий
+      // Check horizontal lines
       for (let row = 0; row < this.boardSize; row++) {
         for (let col = 0; col < this.boardSize - 2; col++) {
           const color = this.board[row][col].color;
@@ -90,15 +101,16 @@ export default {
               color === this.board[row][col + 1].color &&
               color === this.board[row][col + 2].color
           ) {
-            // Очистка ряда
+            // Clear the line
             updatedBoard[row][col].color = "";
             updatedBoard[row][col + 1].color = "";
             updatedBoard[row][col + 2].color = "";
+            hasLineCleared = true;
           }
         }
       }
 
-      // Проверка вертикальных линий
+      // Check vertical lines
       for (let col = 0; col < this.boardSize; col++) {
         for (let row = 0; row < this.boardSize - 2; row++) {
           const color = this.board[row][col].color;
@@ -106,34 +118,32 @@ export default {
               color === this.board[row + 1][col].color &&
               color === this.board[row + 2][col].color
           ) {
-            // Очистка ряда
+            // Clear the line
             updatedBoard[row][col].color = "";
             updatedBoard[row + 1][col].color = "";
             updatedBoard[row + 2][col].color = "";
+            hasLineCleared = true;
           }
         }
       }
 
-      // Обновление доски
-      this.board = updatedBoard;
+      // Only update the board if a line was cleared
+      if (hasLineCleared) {
+        this.board = updatedBoard;
+      }
 
-      // Применяем падение шариков
-      this.dropBalls();
-
-      // Генерация новых шариков сверху
-      this.generateNewBalls();
+      return hasLineCleared;
     },
     dropBalls() {
-      // Падение шариков
+      // Make the balls drop down
       for (let col = 0; col < this.boardSize; col++) {
         let emptySpaces = 0;
 
-        // Идем снизу вверх и двигаем все фишки вниз
         for (let row = this.boardSize - 1; row >= 0; row--) {
           if (this.board[row][col].color === "") {
             emptySpaces++;
           } else if (emptySpaces > 0) {
-            // Перемещаем фишку вниз
+            // Move the ball down
             this.board[row + emptySpaces][col].color = this.board[row][col].color;
             this.board[row][col].color = "";
           }
@@ -141,7 +151,7 @@ export default {
       }
     },
     generateNewBalls() {
-      // Генерация новых фишек сверху
+      // Generate new balls from the top
       const colors = [
         "#FF0000",
         "#024217",
@@ -156,7 +166,6 @@ export default {
       for (let col = 0; col < this.boardSize; col++) {
         for (let row = 0; row < this.boardSize; row++) {
           if (this.board[row][col].color === "") {
-            // Генерируем случайный цвет для пустых ячеек
             this.board[row][col].color = colors[Math.floor(Math.random() * colors.length)];
           }
         }
@@ -172,22 +181,22 @@ export default {
 <style scoped>
 .game-board {
   display: grid;
-  grid-template-columns: repeat(8, 40px); /* 8 колонок по 40px */
-  grid-template-rows: repeat(8, 40px); /* 8 строк по 40px */
+  grid-template-columns: repeat(8, 40px); /* 8 columns, each 40px */
+  grid-template-rows: repeat(8, 40px); /* 8 rows, each 40px */
   gap: 4px;
-  width: 100%; /* Занимает всю ширину родителя */
-  height: 100%; /* Занимает всю высоту родителя */
+  width: 100%;
+  height: 100%;
 }
 
 .row {
-  display: contents; /* Используем содержимое как отдельные ячейки в сетке */
+  display: contents;
 }
 
 .cell {
   width: 40px;
   height: 40px;
-  border-radius: 50%; /* Круглые ячейки */
-  background-color: gray; /* Цвет фишек */
-  transition: border 0.3s ease; /* Плавное изменение рамки */
+  border-radius: 50%;
+  background-color: gray;
+  transition: border 0.3s ease;
 }
 </style>
