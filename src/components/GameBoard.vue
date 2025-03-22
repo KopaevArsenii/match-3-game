@@ -23,9 +23,9 @@
 export default {
   data() {
     return {
-      boardSize: 8, // Board size (8x8)
+      boardSize: 8,
       board: [],
-      selectedCell: null, // Coordinates of the selected cell
+      selectedCell: null,
     };
   },
   methods: {
@@ -50,50 +50,39 @@ export default {
       if (this.selectedCell) {
         const [selectedRow, selectedCol] = this.selectedCell;
 
-        // Ensure the clicked cell is adjacent to the selected one
         if (
             (Math.abs(selectedRow - rowIndex) === 1 && selectedCol === colIndex) ||
             (Math.abs(selectedCol - colIndex) === 1 && selectedRow === rowIndex)
         ) {
-          // Backup the board before making a swap
           const backupBoard = JSON.parse(JSON.stringify(this.board));
 
-          // Swap the selected cells
           const temp = this.board[rowIndex][colIndex].color;
           this.board[rowIndex][colIndex].color = this.board[selectedRow][selectedCol].color;
           this.board[selectedRow][selectedCol].color = temp;
 
-          // Check if a valid line is cleared
           if (this.checkAndClearLines()) {
-            // If valid, proceed with the next steps
             this.dropBalls();
             this.generateNewBalls();
           } else {
-            // If no line is cleared, revert the board to the previous state (backup)
             this.board = backupBoard;
           }
         }
 
-        // Reset the selection
         this.selectedCell = null;
       } else {
-        // Select the clicked ball and highlight it
         this.selectedCell = [rowIndex, colIndex];
       }
     },
     clearSelection() {
-      // Reset the selection if clicked outside the field
       this.selectedCell = null;
     },
     isSelected(rowIndex, colIndex) {
-      // Check if the current cell is selected
       return this.selectedCell && this.selectedCell[0] === rowIndex && this.selectedCell[1] === colIndex;
     },
     checkAndClearLines() {
       let updatedBoard = [...this.board];
       let hasLineCleared = false;
 
-      // Check horizontal lines
       for (let row = 0; row < this.boardSize; row++) {
         for (let col = 0; col < this.boardSize - 2; col++) {
           const color = this.board[row][col].color;
@@ -101,7 +90,6 @@ export default {
               color === this.board[row][col + 1].color &&
               color === this.board[row][col + 2].color
           ) {
-            // Clear the line
             updatedBoard[row][col].color = "";
             updatedBoard[row][col + 1].color = "";
             updatedBoard[row][col + 2].color = "";
@@ -110,7 +98,6 @@ export default {
         }
       }
 
-      // Check vertical lines
       for (let col = 0; col < this.boardSize; col++) {
         for (let row = 0; row < this.boardSize - 2; row++) {
           const color = this.board[row][col].color;
@@ -118,7 +105,6 @@ export default {
               color === this.board[row + 1][col].color &&
               color === this.board[row + 2][col].color
           ) {
-            // Clear the line
             updatedBoard[row][col].color = "";
             updatedBoard[row + 1][col].color = "";
             updatedBoard[row + 2][col].color = "";
@@ -127,7 +113,6 @@ export default {
         }
       }
 
-      // Only update the board if a line was cleared
       if (hasLineCleared) {
         this.board = updatedBoard;
       }
@@ -135,7 +120,6 @@ export default {
       return hasLineCleared;
     },
     dropBalls() {
-      // Make the balls drop down
       for (let col = 0; col < this.boardSize; col++) {
         let emptySpaces = 0;
 
@@ -181,8 +165,8 @@ export default {
 <style scoped>
 .game-board {
   display: grid;
-  grid-template-columns: repeat(8, 40px); /* 8 columns, each 40px */
-  grid-template-rows: repeat(8, 40px); /* 8 rows, each 40px */
+  grid-template-columns: repeat(8, 40px);
+  grid-template-rows: repeat(8, 40px);
   gap: 4px;
   width: 100%;
   height: 100%;
